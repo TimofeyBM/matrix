@@ -50,8 +50,66 @@ namespace bmstu {
         }
 
 
+        template<class S>
+        friend S &operator<<(S &ovs, const bmstu::matrix<T> &obj) {
+            for (size_t i = 0; i < obj.rows_; ++i) {
+                for (size_t j = 0; j < obj.columns_; ++j) {
+                    ovs << obj(i, j) << " ";
+                }
+                ovs << "\r\n";
+            }
+            return ovs;
+        }
+
+        std::vector<T *> operator[](size_t i) {
+            return representation_[i];
+        }
+
+        std::vector<T> operator[](size_t i) const {
+            std::vector<T> result;
+            result.resize(columns_);
+            for (size_t j = 0; j < columns_; ++j) {
+                result[j] = *representation_[i][j];
+            }
+            return result;
+        }
+
+        T det() {
+            if (columns_ != rows_) {
+                throw std::logic_error("Matrix have determinant if (rows == colimns)!");
+            } else {
+                T result = T();
+                std::vector<size_t> indexes(columns_);
+                int sign = 1;
+                for (size_t i = 0; i < columns_; ++i) {
+                    indexes[i] = i;
+                }
+                permute(indexes, indexes.size(), result, sign);
+                return result;
+            }
+        }
 
     private:
+        void permute(std::vector<size_t> &a, size_t pos, T &value, int &sign) {
+            if (pos == 1) {
+                T mrow = T(1);
+                for (size_t i = 0; i < columns_; ++i) {
+                    mrow *= *this->representation_[i][a[i]];
+                }
+                value += (mrow * sign);
+            } else {
+                for (size_t i = 0; i < pos; ++i) {
+                    permute(a, pos - 1, value, sign);
+                    if (pos % 2) {
+                        std::swap(a[0], a[pos - 1]);
+                    } else {
+                        std::swap(a[i], a[pos - 1]);
+                        sign *= (-1);
+                    }
+                }
+            }
+        }
+
         std::vector<T> data_;
         std::vector<std::vector<T *>> representation_;
 
